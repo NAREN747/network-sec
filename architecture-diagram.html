@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Security Project - Perimeter Architecture</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #020617; min-height: 100vh; padding: 2rem; color: white; }
+    .container { max-width: 1400px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #22d3ee; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .diagram-container { background: rgba(15, 23, 42, 0.5); border-radius: 1rem; border: 1px solid #1e293b; padding: 1.5rem; overflow-x: auto; }
+    svg { width: 100%; min-width: 1200px; display: block; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .card { background: rgba(15, 23, 42, 0.5); border-radius: 0.75rem; border: 1px solid #1e293b; padding: 1.25rem; }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; }
+    .card-dot.emerald { background: #34d399; }
+    .card-dot.amber { background: #fbbf24; }
+    .card-dot.rose { background: #fb7185; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #475569; font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-row">
+        <div class="pulse-dot"></div>
+        <h1>Perimeter Network Architecture</h1>
+      </div>
+      <p class="subtitle">LAN / DMZ / Internet Zones — VLAN Segmentation, Subnetting & Zone Policy Matrix</p>
+    </div>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 1300 800">
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+          </marker>
+          <marker id="arrowhead-dashed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#fb7185" />
+          </marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+
+        <!-- Background Grid -->
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        <!-- ================================================================
+             ZONE BOUNDARIES (Regions)
+             ================================================================ -->
+
+        <!-- INTERNET ZONE (External) -->
+        <rect x="20" y="20" width="320" height="340" rx="12" fill="rgba(136, 19, 55, 0.08)" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="8,4"/>
+        <text x="32" y="42" fill="#fb7185" font-size="11" font-weight="600">🌐 EXTERNAL / INTERNET</text>
+        <text x="32" y="58" fill="#94a3b8" font-size="8">Untrusted Network — 203.0.113.0/24 (TEST-NET-3)</text>
+        <text x="32" y="72" fill="#94a3b8" font-size="8">Attackers, Public Users, ISP</text>
+
+        <!-- DMZ ZONE -->
+        <rect x="380" y="20" width="500" height="340" rx="12" fill="rgba(120, 53, 15, 0.08)" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="8,4"/>
+        <text x="392" y="42" fill="#fbbf24" font-size="11" font-weight="600">🟠 DMZ (DEMILITARIZED ZONE)</text>
+        <text x="392" y="58" fill="#94a3b8" font-size="8">Public-Facing Services — 10.10.20.0/24 — VLAN 20</text>
+        <text x="392" y="72" fill="#94a3b8" font-size="8">Web Servers, DNS, Mail Relay, Proxy</text>
+
+        <!-- INTERNAL LAN ZONE -->
+        <rect x="20" y="400" width="860" height="360" rx="12" fill="rgba(6, 78, 59, 0.08)" stroke="#34d399" stroke-width="1.5" stroke-dasharray="8,4"/>
+        <text x="32" y="422" fill="#34d399" font-size="11" font-weight="600">🟢 INTERNAL LAN (PRIVATE)</text>
+        <text x="32" y="438" fill="#94a3b8" font-size="8">Employee Network — 10.10.10.0/24 — VLAN 10</text>
+        <text x="32" y="452" fill="#94a3b8" font-size="8">Workstations, Printers, Internal Apps, AD/DHCP</text>
+
+        <!-- MANAGEMENT ZONE -->
+        <rect x="920" y="20" width="350" height="740" rx="12" fill="rgba(8, 51, 68, 0.08)" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="8,4"/>
+        <text x="932" y="42" fill="#22d3ee" font-size="11" font-weight="600">🔵 MANAGEMENT / CONTROL PLANE</text>
+        <text x="932" y="58" fill="#94a3b8" font-size="8">Out-of-Band Mgmt — 10.10.0.0/24 — VLAN 99</text>
+        <text x="932" y="72" fill="#94a3b8" font-size="8">Router, Switches, Firewall, SIEM, Admin Hosts</text>
+
+        <!-- ================================================================
+             INTERNET ZONE COMPONENTS
+             ================================================================ -->
+
+        <!-- Attacker / Threat Actor -->
+        <rect x="40" y="100" width="130" height="70" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <rect x="40" y="100" width="130" height="70" rx="6" fill="#0f172a"/>
+        <text x="105" y="125" fill="white" font-size="11" font-weight="600" text-anchor="middle">Attacker</text>
+        <text x="105" y="141" fill="#94a3b8" font-size="8" text-anchor="middle">Kali / Botnet</text>
+        <text x="105" y="155" fill="#fb7185" font-size="7" text-anchor="middle">203.0.113.100</text>
+
+        <!-- Legitimate Public User -->
+        <rect x="200" y="100" width="120" height="70" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="200" y="100" width="120" height="70" rx="6" fill="#0f172a"/>
+        <text x="260" y="125" fill="white" font-size="11" font-weight="600" text-anchor="middle">Public User</text>
+        <text x="260" y="141" fill="#94a3b8" font-size="8" text-anchor="middle">Browser</text>
+        <text x="260" y="155" fill="#22d3ee" font-size="7" text-anchor="middle">Dynamic IP</text>
+
+        <!-- ISP Router -->
+        <rect x="40" y="200" width="140" height="60" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <rect x="40" y="200" width="140" height="60" rx="6" fill="#0f172a"/>
+        <text x="110" y="220" fill="white" font-size="10" font-weight="600" text-anchor="middle">ISP Gateway</text>
+        <text x="110" y="236" fill="#94a3b8" font-size="8" text-anchor="middle">203.0.113.1/30</text>
+        <text x="110" y="250" fill="#fbbf24" font-size="7" text-anchor="middle">Next-Hop to Edge</text>
+
+        <!-- ================================================================
+             DMZ ZONE COMPONENTS
+             ================================================================ -->
+
+        <!-- Web Server 1 -->
+        <rect x="410" y="100" width="150" height="80" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <rect x="410" y="100" width="150" height="80" rx="6" fill="#0f172a"/>
+        <text x="485" y="122" fill="white" font-size="11" font-weight="600" text-anchor="middle">Web Server 1</text>
+        <text x="485" y="138" fill="#94a3b8" font-size="8" text-anchor="middle">Nginx + App</text>
+        <text x="485" y="152" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.20.10/24</text>
+        <text x="485" y="166" fill="#fb7185" font-size="7" text-anchor="middle">VLAN 20 • :80,443</text>
+
+        <!-- Web Server 2 -->
+        <rect x="580" y="100" width="150" height="80" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <rect x="580" y="100" width="150" height="80" rx="6" fill="#0f172a"/>
+        <text x="655" y="122" fill="white" font-size="11" font-weight="600" text-anchor="middle">Web Server 2</text>
+        <text x="655" y="138" fill="#94a3b8" font-size="8" text-anchor="middle">Nginx + App</text>
+        <text x="655" y="152" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.20.11/24</text>
+        <text x="655" y="166" fill="#fb7185" font-size="7" text-anchor="middle">VLAN 20 • :80,443</text>
+
+        <!-- Load Balancer (DMZ) -->
+        <rect x="750" y="100" width="110" height="80" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <rect x="750" y="100" width="110" height="80" rx="6" fill="#0f172a"/>
+        <text x="805" y="122" fill="white" font-size="10" font-weight="600" text-anchor="middle">LB (DMZ)</text>
+        <text x="805" y="138" fill="#94a3b8" font-size="8" text-anchor="middle">HAProxy</text>
+        <text x="805" y="152" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.20.5/24</text>
+        <text x="805" y="166" fill="#34d399" font-size="7" text-anchor="middle">VLAN 20 • :80,443</text>
+
+        <!-- DNS Server -->
+        <rect x="410" y="210" width="130" height="70" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <rect x="410" y="210" width="130" height="70" rx="6" fill="#0f172a"/>
+        <text x="475" y="232" fill="white" font-size="10" font-weight="600" text-anchor="middle">DNS Server</text>
+        <text x="475" y="248" fill="#94a3b8" font-size="8" text-anchor="middle">Bind9</text>
+        <text x="475" y="262" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.20.20/24</text>
+        <text x="475" y="276" fill="#fbbf24" font-size="7" text-anchor="middle">VLAN 20 • :53</text>
+
+        <!-- Mail Relay -->
+        <rect x="560" y="210" width="130" height="70" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <rect x="560" y="210" width="130" height="70" rx="6" fill="#0f172a"/>
+        <text x="625" y="232" fill="white" font-size="10" font-weight="600" text-anchor="middle">Mail Relay</text>
+        <text x="625" y="248" fill="#94a3b8" font-size="8" text-anchor="middle">Postfix</text>
+        <text x="625" y="262" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.20.25/24</text>
+        <text x="625" y="276" fill="#fbbf24" font-size="7" text-anchor="middle">VLAN 20 • :25,587</text>
+
+        <!-- Proxy / WAF -->
+        <rect x="710" y="210" width="130" height="70" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <rect x="710" y="210" width="130" height="70" rx="6" fill="#0f172a"/>
+        <text x="775" y="232" fill="white" font-size="10" font-weight="600" text-anchor="middle">WAF / Proxy</text>
+        <text x="775" y="248" fill="#94a3b8" font-size="8" text-anchor="middle">ModSecurity</text>
+        <text x="775" y="262" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.20.30/24</text>
+        <text x="775" y="276" fill="#fb7185" font-size="7" text-anchor="middle">VLAN 20 • :8080</text>
+
+        <!-- ================================================================
+             INTERNAL LAN ZONE COMPONENTS
+             ================================================================ -->
+
+        <!-- Employee Workstation 1 -->
+        <rect x="40" y="480" width="140" height="70" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <rect x="40" y="480" width="140" height="70" rx="6" fill="#0f172a"/>
+        <text x="110" y="502" fill="white" font-size="10" font-weight="600" text-anchor="middle">Workstation 1</text>
+        <text x="110" y="518" fill="#94a3b8" font-size="8" text-anchor="middle">Windows 11</text>
+        <text x="110" y="532" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.10.50/24</text>
+        <text x="110" y="546" fill="#34d399" font-size="7" text-anchor="middle">VLAN 10 • DHCP</text>
+
+        <!-- Employee Workstation 2 -->
+        <rect x="200" y="480" width="140" height="70" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <rect x="200" y="480" width="140" height="70" rx="6" fill="#0f172a"/>
+        <text x="270" y="502" fill="white" font-size="10" font-weight="600" text-anchor="middle">Workstation 2</text>
+        <text x="270" y="518" fill="#94a3b8" font-size="8" text-anchor="middle">Linux/Ubuntu</text>
+        <text x="270" y="532" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.10.51/24</text>
+        <text x="270" y="546" fill="#34d399" font-size="7" text-anchor="middle">VLAN 10 • DHCP</text>
+
+        <!-- Printer / IoT -->
+        <rect x="360" y="480" width="130" height="70" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <rect x="360" y="480" width="130" height="70" rx="6" fill="#0f172a"/>
+        <text x="425" y="502" fill="white" font-size="10" font-weight="600" text-anchor="middle">Printer / IoT</text>
+        <text x="425" y="518" fill="#94a3b8" font-size="8" text-anchor="middle">Network Device</text>
+        <text x="425" y="532" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.10.100/24</text>
+        <text x="425" y="546" fill="#34d399" font-size="7" text-anchor="middle">VLAN 10 • Static</text>
+
+        <!-- Internal App Server -->
+        <rect x="510" y="480" width="140" height="70" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <rect x="510" y="480" width="140" height="70" rx="6" fill="#0f172a"/>
+        <text x="580" y="502" fill="white" font-size="10" font-weight="600" text-anchor="middle">Internal App</text>
+        <text x="580" y="518" fill="#94a3b8" font-size="8" text-anchor="middle">Intranet / HR</text>
+        <text x="580" y="532" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.10.10/24</text>
+        <text x="580" y="546" fill="#34d399" font-size="7" text-anchor="middle">VLAN 10 • :8080</text>
+
+        <!-- AD / DHCP / DNS (Internal) -->
+        <rect x="670" y="480" width="140" height="70" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <rect x="670" y="480" width="140" height="70" rx="6" fill="#0f172a"/>
+        <text x="740" y="502" fill="white" font-size="10" font-weight="600" text-anchor="middle">AD / DHCP</text>
+        <text x="740" y="518" fill="#94a3b8" font-size="8" text-anchor="middle">Domain Controller</text>
+        <text x="740" y="532" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.10.5/24</text>
+        <text x="740" y="546" fill="#a78bfa" font-size="7" text-anchor="middle">VLAN 10 • :53,389</text>
+
+        <!-- File Server -->
+        <rect x="40" y="570" width="140" height="70" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <rect x="40" y="570" width="140" height="70" rx="6" fill="#0f172a"/>
+        <text x="110" y="592" fill="white" font-size="10" font-weight="600" text-anchor="middle">File Server</text>
+        <text x="110" y="608" fill="#94a3b8" font-size="8" text-anchor="middle">SMB / NFS</text>
+        <text x="110" y="622" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.10.20/24</text>
+        <text x="110" y="636" fill="#34d399" font-size="7" text-anchor="middle">VLAN 10 • :445</text>
+
+        <!-- Database (Internal) -->
+        <rect x="200" y="570" width="130" height="70" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <rect x="200" y="570" width="130" height="70" rx="6" fill="#0f172a"/>
+        <text x="265" y="592" fill="white" font-size="10" font-weight="600" text-anchor="middle">Database</text>
+        <text x="265" y="608" fill="#94a3b8" font-size="8" text-anchor="middle">PostgreSQL</text>
+        <text x="265" y="622" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.10.30/24</text>
+        <text x="265" y="636" fill="#a78bfa" font-size="7" text-anchor="middle">VLAN 10 • :5432</text>
+
+        <!-- Backup Server -->
+        <rect x="360" y="570" width="130" height="70" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <rect x="360" y="570" width="130" height="70" rx="6" fill="#0f172a"/>
+        <text x="425" y="592" fill="white" font-size="10" font-weight="600" text-anchor="middle">Backup</text>
+        <text x="425" y="608" fill="#94a3b8" font-size="8" text-anchor="middle">Veeam / Restic</text>
+        <text x="425" y="622" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.10.40/24</text>
+        <text x="425" y="636" fill="#34d399" font-size="7" text-anchor="middle">VLAN 10 • :9090</text>
+
+        <!-- Monitoring / SIEM -->
+        <rect x="510" y="570" width="140" height="70" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <rect x="510" y="570" width="140" height="70" rx="6" fill="#0f172a"/>
+        <text x="580" y="592" fill="white" font-size="10" font-weight="600" text-anchor="middle">SIEM / Monitor</text>
+        <text x="580" y="608" fill="#94a3b8" font-size="8" text-anchor="middle">Wazuh / ELK</text>
+        <text x="580" y="622" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.10.15/24</text>
+        <text x="580" y="636" fill="#fb7185" font-size="7" text-anchor="middle">VLAN 10 • :514,9200</text>
+
+        <!-- ================================================================
+             MANAGEMENT ZONE COMPONENTS
+             ================================================================ -->
+
+        <!-- Edge Router (Cisco) -->
+        <rect x="940" y="100" width="140" height="80" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <rect x="940" y="100" width="140" height="80" rx="6" fill="#0f172a"/>
+        <text x="1010" y="122" fill="white" font-size="11" font-weight="600" text-anchor="middle">Edge Router</text>
+        <text x="1010" y="138" fill="#94a3b8" font-size="8" text-anchor="middle">Cisco ISR 4321</text>
+        <text x="1010" y="152" fill="#22d3ee" font-size="7" text-anchor="middle">Gi0/0: 203.0.113.2/30</text>
+        <text x="1010" y="166" fill="#fbbf24" font-size="7" text-anchor="middle">Gi0/0.10: 10.10.10.1</text>
+        <text x="1010" y="178" fill="#fbbf24" font-size="7" text-anchor="middle">Gi0/0.20: 10.10.20.1</text>
+        <text x="1010" y="190" fill="#22d3ee" font-size="7" text-anchor="middle">Gi0/0.99: 10.10.0.1</text>
+
+        <!-- Core Switch (L3) -->
+        <rect x="940" y="210" width="140" height="80" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <rect x="940" y="210" width="140" height="80" rx="6" fill="#0f172a"/>
+        <text x="1010" y="232" fill="white" font-size="11" font-weight="600" text-anchor="middle">Core Switch</text>
+        <text x="1010" y="248" fill="#94a3b8" font-size="8" text-anchor="middle">Cisco Catalyst 9300</text>
+        <text x="1010" y="262" fill="#22d3ee" font-size="7" text-anchor="middle">VLAN 10,20,99</text>
+        <text x="1010" y="276" fill="#34d399" font-size="7" text-anchor="middle">Trunk to Router</text>
+        <text x="1010" y="288" fill="#34d399" font-size="7" text-anchor="middle">SVI: 10.10.0.2/24</text>
+
+        <!-- Firewall (Zone-Based) -->
+        <rect x="1090" y="100" width="150" height="80" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <rect x="1090" y="100" width="150" height="80" rx="6" fill="#0f172a"/>
+        <text x="1165" y="122" fill="white" font-size="11" font-weight="600" text-anchor="middle">Firewall</text>
+        <text x="1165" y="138" fill="#94a3b8" font-size="8" text-anchor="middle">Palo Alto / FortiGate</text>
+        <text x="1165" y="152" fill="#22d3ee" font-size="7" text-anchor="middle">Zone: Internet</text>
+        <text x="1165" y="166" fill="#fbbf24" font-size="7" text-anchor="middle">Zone: DMZ</text>
+        <text x="1165" y="178" fill="#34d399" font-size="7" text-anchor="middle">Zone: LAN</text>
+        <text x="1165" y="190" fill="#fb7185" font-size="7" text-anchor="middle">Zone: Mgmt</text>
+
+        <!-- SIEM / Log Collector -->
+        <rect x="940" y="320" width="150" height="70" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <rect x="940" y="320" width="150" height="70" rx="6" fill="#0f172a"/>
+        <text x="1015" y="342" fill="white" font-size="11" font-weight="600" text-anchor="middle">Central SIEM</text>
+        <text x="1015" y="358" fill="#94a3b8" font-size="8" text-anchor="middle">Splunk / ELK</text>
+        <text x="1015" y="372" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.0.10/24</text>
+        <text x="1015" y="386" fill="#fb7185" font-size="7" text-anchor="middle">VLAN 99 • :514,8089</text>
+
+        <!-- Admin Workstation -->
+        <rect x="1090" y="210" width="150" height="70" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <rect x="1090" y="210" width="150" height="70" rx="6" fill="#0f172a"/>
+        <text x="1165" y="232" fill="white" font-size="11" font-weight="600" text-anchor="middle">Admin Host</text>
+        <text x="1165" y="248" fill="#94a3b8" font-size="8" text-anchor="middle">Jump Box / Bastion</text>
+        <text x="1165" y="262" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.0.50/24</text>
+        <text x="1165" y="276" fill="#22d3ee" font-size="7" text-anchor="middle">VLAN 99 • SSH Only</text>
+
+        <!-- NTP / Time Server -->
+        <rect x="940" y="410" width="150" height="70" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <rect x="940" y="410" width="150" height="70" rx="6" fill="#0f172a"/>
+        <text x="1015" y="432" fill="white" font-size="11" font-weight="600" text-anchor="middle">NTP Server</text>
+        <text x="1015" y="448" fill="#94a3b8" font-size="8" text-anchor="middle">Chrony / NTPD</text>
+        <text x="1015" y="462" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.0.20/24</text>
+        <text x="1015" y="476" fill="#34d399" font-size="7" text-anchor="middle">VLAN 99 • :123 UDP</text>
+
+        <!-- Config Mgmt (Ansible) -->
+        <rect x="1090" y="320" width="150" height="70" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <rect x="1090" y="320" width="150" height="70" rx="6" fill="#0f172a"/>
+        <text x="1165" y="342" fill="white" font-size="11" font-weight="600" text-anchor="middle">Ansible / GitOps</text>
+        <text x="1165" y="358" fill="#94a3b8" font-size="8" text-anchor="middle">Config Mgmt</text>
+        <text x="1165" y="372" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.0.30/24</text>
+        <text x="1165" y="386" fill="#a78bfa" font-size="7" text-anchor="middle">VLAN 99 • SSH/API</text>
+
+        <!-- Vulnerability Scanner -->
+        <rect x="940" y="500" width="150" height="70" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <rect x="940" y="500" width="150" height="70" rx="6" fill="#0f172a"/>
+        <text x="1015" y="522" fill="white" font-size="11" font-weight="600" text-anchor="middle">Vuln Scanner</text>
+        <text x="1015" y="538" fill="#94a3b8" font-size="8" text-anchor="middle">OpenVAS / Nessus</text>
+        <text x="1015" y="552" fill="#22d3ee" font-size="7" text-anchor="middle">10.10.0.40/24</text>
+        <text x="1015" y="566" fill="#fb7185" font-size="7" text-anchor="middle">VLAN 99 • Scheduled</text>
+
+        <!-- ================================================================
+             CONNECTIONS (Arrows)
+             ================================================================ -->
+
+        <!-- Internet → ISP Gateway -->
+        <line x1="170" y1="170" x2="110" y2="200" stroke="#fb7185" stroke-width="1.5" marker-end="url(#arrowhead-dashed)" stroke-dasharray="5,5"/>
+        <text x="160" y="180" fill="#fb7185" font-size="7">Attack Traffic</text>
+
+        <!-- Public User → ISP Gateway -->
+        <line x1="260" y1="170" x2="110" y2="200" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="220" y="180" fill="#22d3ee" font-size="7">Legitimate HTTPS</text>
+
+        <!-- ISP Gateway → Edge Router (WAN) -->
+        <line x1="180" y1="230" x2="940" y2="140" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowhead)"/>
+        <text x="500" y="160" fill="#fbbf24" font-size="8" font-weight="600">WAN Link (203.0.113.0/30)</text>
+
+        <!-- Edge Router → Firewall (Internet Zone) -->
+        <line x1="1080" y1="140" x2="1090" y2="140" stroke="#fb7185" stroke-width="1.5" marker-end="url(#arrowhead-dashed)" stroke-dasharray="4,4"/>
+        <text x="1085" y="132" fill="#fb7185" font-size="7">Untrusted</text>
+
+        <!-- Firewall → DMZ (Web LB) -->
+        <line x1="1165" y1="180" x2="805" y2="180" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="980" y="172" fill="#fbbf24" font-size="7">Allow: HTTP/HTTPS</text>
+
+        <!-- Firewall → DMZ (DNS) -->
+        <line x1="1165" y1="180" x2="475" y2="210" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="850" y="190" fill="#fbbf24" font-size="7">Allow: DNS (53)</text>
+
+        <!-- Firewall → LAN (Internal) - BLOCKED -->
+        <line x1="1165" y1="180" x2="580" y2="480" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="6,6" marker-end="url(#arrowhead-dashed)"/>
+        <text x="850" y="330" fill="#fb7185" font-size="7">DENY: Internet→LAN</text>
+
+        <!-- Edge Router Sub-interfaces (RoAS) -->
+        <!-- Gi0/0.10 → LAN -->
+        <line x1="1010" y1="190" x2="110" y2="480" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="600" y="300" fill="#34d399" font-size="7" font-weight="600">Gi0/0.10 — VLAN 10 — 10.10.10.1/24</text>
+
+        <!-- Gi0/0.20 → DMZ -->
+        <line x1="1010" y1="190" x2="485" y2="180" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="750" y="150" fill="#fbbf24" font-size="7" font-weight="600">Gi0/0.20 — VLAN 20 — 10.10.20.1/24</text>
+
+        <!-- Gi0/0.99 → Mgmt -->
+        <line x1="1010" y1="190" x2="1010" y2="320" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="1030" y="250" fill="#22d3ee" font-size="7" font-weight="600">Gi0/0.99 — VLAN 99 — 10.10.0.1/24</text>
+
+        <!-- Core Switch Trunk -->
+        <line x1="1010" y1="290" x2="1010" y2="320" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="1030" y="305" fill="#34d399" font-size="7">Trunk: VLAN 10,20,99</text>
+
+        <!-- Core Switch → LAN Access Ports -->
+        <line x1="1010" y1="290" x2="110" y2="550" stroke="#34d399" stroke-width="1" stroke-dasharray="2,4" marker-end="url(#arrowhead)"/>
+        <text x="600" y="450" fill="#34d399" font-size="6">Access: VLAN 10</text>
+
+        <!-- Core Switch → DMZ Access Ports -->
+        <line x1="1010" y1="290" x2="485" y2="180" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2,4" marker-end="url(#arrowhead)"/>
+        <text x="750" y="220" fill="#fbbf24" font-size="6">Access: VLAN 20</text>
+
+        <!-- Core Switch → Mgmt Access Ports -->
+        <line x1="1010" y1="290" x2="1015" y2="390" stroke="#22d3ee" stroke-width="1" stroke-dasharray="2,4" marker-end="url(#arrowhead)"/>
+        <text x="1030" y="340" fill="#22d3ee" font-size="6">Access: VLAN 99</text>
+
+        <!-- LAN Workstation → Internet (via Router) -->
+        <path d="M 110 480 L 110 420 Q 110 380 300 380 L 600 380 Q 800 380 1010 380 L 1010 290" fill="none" stroke="#34d399" stroke-width="1" stroke-dasharray="4,4" marker-end="url(#arrowhead)"/>
+        <text x="500" y="370" fill="#34d399" font-size="7">LAN→Internet (Allowed: HTTP/HTTPS/DNS)</text>
+
+        <!-- LAN Workstation → DMZ Web -->
+        <path d="M 110 480 L 110 420 Q 110 380 300 380 L 485 380 Q 485 300 485 180" fill="none" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="300" y="370" fill="#34d399" font-size="7">LAN→DMZ (Allowed: HTTP/HTTPS)</text>
+
+        <!-- DMZ Web → Internet (Updates) -->
+        <path d="M 485 180 L 485 150 Q 485 120 700 120 L 1010 120 Q 1050 120 1080 140" fill="none" stroke="#fbbf24" stroke-width="1" stroke-dasharray="4,4" marker-end="url(#arrowhead)"/>
+        <text x="700" y="110" fill="#fbbf24" font-size="7">DMZ→Internet (Allowed: Updates)</text>
+
+        <!-- Admin Host → All Devices (Mgmt) -->
+        <line x1="1165" y1="245" x2="1010" y2="140" stroke="#22d3ee" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+        <line x1="1165" y1="245" x2="1010" y2="250" stroke="#22d3ee" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+        <line x1="1165" y1="245" x2="1165" y2="140" stroke="#22d3ee" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+        <text x="1180" y="200" fill="#22d3ee" font-size="7">Mgmt: SSH/HTTPS</text>
+
+        <!-- SIEM collecting from all zones (dashed) -->
+        <line x1="1015" y1="390" x2="110" y2="605" stroke="#fb7185" stroke-width="0.8" stroke-dasharray="3,3"/>
+        <line x1="1015" y1="390" x2="485" y2="180" stroke="#fb7185" stroke-width="0.8" stroke-dasharray="3,3"/>
+        <line x1="1015" y1="390" x2="1010" y2="140" stroke="#fb7185" stroke-width="0.8" stroke-dasharray="3,3"/>
+        <line x1="1015" y1="390" x2="1165" y2="140" stroke="#fb7185" stroke-width="0.8" stroke-dasharray="3,3"/>
+        <text x="1030" y="405" fill="#fb7185" font-size="6">Syslog/NetFlow from all zones</text>
+
+        <!-- ================================================================
+             LEGEND
+             ================================================================ -->
+        <text x="940" y="610" fill="white" font-size="11" font-weight="600">Legend</text>
+
+        <rect x="940" y="622" width="16" height="10" rx="2" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="962" y="630" fill="#94a3b8" font-size="8">Client / Workstation</text>
+
+        <rect x="940" y="638" width="16" height="10" rx="2" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1"/>
+        <text x="962" y="646" fill="#94a3b8" font-size="8">Backend / Server</text>
+
+        <rect x="940" y="654" width="16" height="10" rx="2" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="962" y="662" fill="#94a3b8" font-size="8">Network / Cloud</text>
+
+        <rect x="940" y="670" width="16" height="10" rx="2" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="962" y="678" fill="#94a3b8" font-size="8">Database / Identity</text>
+
+        <rect x="940" y="686" width="16" height="10" rx="2" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1"/>
+        <text x="962" y="694" fill="#94a3b8" font-size="8">Security / WAF / SIEM</text>
+
+        <line x1="940" y1="708" x2="956" y2="708" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="5,5"/>
+        <text x="962" y="711" fill="#94a3b8" font-size="8">Attack / Denied Flow</text>
+
+        <line x1="940" y1="720" x2="956" y2="720" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="3,3"/>
+        <text x="962" y="723" fill="#94a3b8" font-size="8">Management / Monitoring</text>
+
+        <rect x="1080" y="622" width="16" height="10" rx="2" fill="transparent" stroke="#fb7185" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="1102" y="630" fill="#94a3b8" font-size="8">Security Group / Zone Boundary</text>
+
+        <rect x="1080" y="638" width="16" height="10" rx="2" fill="rgba(136, 19, 55, 0.08)" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="8,4"/>
+        <text x="1102" y="646" fill="#94a3b8" font-size="8">Zone Region (Dashed Border)</text>
+
+      </svg>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot rose"></div>
+          <h3>Zone Segmentation Summary</h3>
+        </div>
+        <ul>
+          <li>• Internet (External): 203.0.113.0/24 — Untrusted, attackers, public users</li>
+          <li>• DMZ: 10.10.20.0/24 (VLAN 20) — Public-facing: Web, DNS, Mail, WAF</li>
+          <li>• LAN: 10.10.10.0/24 (VLAN 10) — Employees, workstations, internal apps, AD</li>
+          <li>• Management: 10.10.0.0/24 (VLAN 99) — Router, Switch, Firewall, SIEM, Admin</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot amber"></div>
+          <h3>Router-on-a-Stick (RoAS) Config</h3>
+        </div>
+        <ul>
+          <li>• Single physical link (Gi0/0) trunked to Core Switch</li>
+          <li>• Gi0/0.10 — encap dot1Q 10 — 10.10.10.1/24 (LAN gateway)</li>
+          <li>• Gi0/0.20 — encap dot1Q 20 — 10.10.20.1/24 (DMZ gateway)</li>
+          <li>• Gi0/0.99 — encap dot1Q 99 — 10.10.0.1/24 (Mgmt gateway)</li>
+          <li>• WAN: Gi0/1 — 203.0.113.2/30 → ISP 203.0.113.1</li>
+          <li>• Default route: ip route 0.0.0.0 0.0.0.0 203.0.113.1</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot cyan"></div>
+          <h3>Zone Policy Matrix (ACL Logic)</h3>
+        </div>
+        <ul>
+          <li>• LAN → DMZ: Permit TCP 80,443 (web access)</li>
+          <li>• LAN → Internet: Permit TCP 80,443, UDP 53 (web, DNS)</li>
+          <li>• LAN → Mgmt: Permit TCP 22 (SSH) FROM admin host only</li>
+          <li>• DMZ → Internet: Permit TCP 80,443, UDP 53,123 (updates, NTP)</li>
+          <li>• DMZ → LAN: DENY ALL (no initiated connections inward)</li>
+          <li>• Internet → DMZ: Permit TCP 80,443 (public web), ESTABLISHED</li>
+          <li>• Internet → LAN/Mgmt: DENY ALL</li>
+          <li>• Mgmt → All: Permit SSH, HTTPS, SNMP, Syslog for mgmt</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="footer">
+      Network Security Project — CO1: Perimeter Architecture • Generated via architecture-diagram skill
+    </p>
+  </div>
+</body>
+</html>
