@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Network Threat Detection Engine — Network Security Project (CO4)
+Network Threat Detection Engine - Network Security Project (CO4)
 Ingests network traffic (PCAP or live), extracts payloads, and matches signatures.
 
 Features:
@@ -188,7 +188,7 @@ class StreamReassembler:
             self.stream_state[flow_key] = {'syn_seen': False, 'established': False}
 
         state = self.stream_state[flow_key]
-        payload = bytes(tcp.payload) if Raw in tcp else b''
+        payload = bytes(tcp.payload) if tcp.payload else b''
 
         # Track connection state
         if tcp.flags & 0x02:  # SYN
@@ -411,7 +411,7 @@ class ThreatDetector:
             if reassembled == b"TLS_ENCRYPTED":
                 self.tls_count += 1
                 # Still analyze the raw payload for TLS packets (for SNI, etc)
-                raw_payload = bytes(pkt[TCP].payload) if Raw in pkt[TCP] else b''
+                raw_payload = bytes(pkt[TCP].payload) if pkt[TCP].payload else b''
                 if raw_payload:
                     self._analyze_payload(raw_payload, pkt, pkt_time)
                 return
@@ -420,14 +420,14 @@ class ThreatDetector:
                 self._analyze_payload(reassembled, pkt, pkt_time)
             else:
                 # Also check raw payload for packets that don't complete HTTP messages
-                raw_payload = bytes(pkt[TCP].payload) if Raw in pkt[TCP] else b''
+                raw_payload = bytes(pkt[TCP].payload) if pkt[TCP].payload else b''
                 if raw_payload:
                     self._analyze_payload(raw_payload, pkt, pkt_time)
 
         # UDP (DNS, etc.)
         elif UDP in pkt:
             udp = pkt[UDP]
-            payload = bytes(udp.payload) if Raw in udp else b''
+            payload = bytes(udp.payload) if udp.payload else b''
             if payload:
                 self._analyze_payload(payload, pkt, pkt_time)
 
@@ -472,7 +472,7 @@ class ThreatDetector:
                 )
                 self._emit_alert(alert)
 
-        except Exception as e:
+        except Exception:
             pass  # Silently skip decode errors
 
     def _decode_payload(self, payload: bytes) -> str:
@@ -569,11 +569,11 @@ def generate_test_pcap(output_path: Path):
                    TCP(sport=54327, dport=80, flags="PA", seq=7001)/
                    Raw(b"GET /download?file=../../../etc/passwd HTTP/1.1\r\nHost: web1.dmz.local\r\n\r\n"))
 
-    # Command Injection: ; cat /etc/passwd
+    # Command Injection: ; cat /etc/passwd (fixed: space after semicolon)
     packets.append(Ether(src=SRC_MAC, dst=DST_MAC)/
                    IP(src="10.10.10.57", dst="10.10.20.10")/
                    TCP(sport=54328, dport=80, flags="PA", seq=8001)/
-                   Raw(b"GET /ping?host=8.8.8.8;cat+/etc/passwd HTTP/1.1\r\nHost: web1.dmz.local\r\n\r\n"))
+                   Raw(b"GET /ping?host=8.8.8.8; cat /etc/passwd HTTP/1.1\r\nHost: web1.dmz.local\r\n\r\n"))
 
     # Port Scan: SYN packets to many ports (from attacker)
     for i, port in enumerate(range(1, 25)):
@@ -620,8 +620,8 @@ def main():
     else:
         parser.print_help()
         print("\nExample:")
-        print("  python detect.py --pcap threat-detection/test.pcapng")
-        print("  python detect.py --generate-test --output threat-detection/test.pcapng")
+        print("  python detect.py --pcap test.pcapng")
+        print("  python detect.py --generate-test --output test.pcapng")
 
 
 if __name__ == "__main__":

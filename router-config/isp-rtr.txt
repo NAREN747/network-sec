@@ -1,0 +1,22 @@
+! ================================================================
+! ISP-RTR (Cisco 2911, Packet Tracer 8.x)
+! Simulates the Internet.
+! Gi0/0 faces RTR-EDGE, Gi0/1 faces PUBLIC-PC.
+! ================================================================
+enable
+configure terminal
+hostname ISP-RTR
+no ip domain-lookup
+interface GigabitEthernet0/0
+ description Link to RTR-EDGE
+ ip address 203.0.113.1 255.255.255.252
+ no shutdown
+interface GigabitEthernet0/1
+ description Public client network
+ ip address 203.0.113.97 255.255.255.224
+ no shutdown
+! Return route to the whole 10.10.0.0/16 plan via the edge router.
+! (A default route to RTR-EDGE would loop unknown traffic back to it.)
+ip route 10.10.0.0 255.255.0.0 203.0.113.2
+end
+write memory

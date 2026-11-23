@@ -1,6 +1,6 @@
 # Protocol Stack Analysis — CO2
 
-**Generated:** Fri Nov 20 10:01:32 2026
+**Generated:** Mon Nov 23 10:28:19 2026
 **Source:** 10.10.10.50:54321 (LAN)
 **Destination:** 10.10.20.10:80 (DMZ)
 **Gateway:** 10.10.10.1 (Router)

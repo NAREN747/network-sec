@@ -21,12 +21,12 @@ pip install -r requirements.txt
 
 ### Analyze PCAP file
 ```bash
-python detect.py --pcap threat-detection/test.pcapng
+python threat-detection/detect.py --pcap threat-detection/test.pcapng
 ```
 
 ### Generate test PCAP
 ```bash
-python detect.py --generate-test --output threat-detection/test.pcapng
+python threat-detection/detect.py --generate-test --output threat-detection/test.pcapng
 ```
 
 ### Live capture (requires admin/root)
@@ -58,15 +58,17 @@ Each alert is a single JSON line:
 
 ## Signature Categories
 
-| Category | Signatures | Description |
-|----------|------------|-------------|
-| **xss** | 12 | Cross-site scripting vectors |
-| **sqli** | 8 | SQL injection patterns |
-| **path_traversal** | 5 | Directory traversal attempts |
-| **cmd_injection** | 4 | OS command injection |
-| **network_scan** | 3 | Port scanning detection |
-| **beaconing** | 2 | C2 beaconing detection |
-| **tls** | 1 | Encrypted traffic flagging |
+| Category | Signatures | Type | Description |
+|----------|------------|------|-------------|
+| **xss** | 12 | Payload | Cross-site scripting vectors |
+| **sqli** | 8 | Payload | SQL injection patterns |
+| **path_traversal** | 5 | Payload | Directory traversal attempts |
+| **cmd_injection** | 4 | Payload | OS command injection |
+| **network_scan** | 3 | Behavioral | Port scanning detection (SYN flood, port sweep, nmap) |
+| **beaconing** | 2 | Behavioral | C2 beaconing detection (regular interval, DNS tunneling) |
+| **tls** | 1 | Behavioral | Encrypted traffic flagging |
+
+**Total: 29 payload signatures + 6 behavioral detectors**
 
 ## Extending Signatures
 

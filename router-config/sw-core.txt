@@ -1,0 +1,42 @@
+! ================================================================
+! SW-CORE (Cisco 3560-24PS, Packet Tracer 8.x)
+! Core switch with VLANs and trunk to RTR-EDGE.
+! Paste into CLI: enable -> configure terminal -> paste -> end -> write memory
+! ================================================================
+enable
+configure terminal
+hostname SW-CORE
+vlan 10
+ name LAN_USERS
+vlan 20
+ name DMZ_SERVERS
+vlan 99
+ name MGMT_CTRL
+vlan 999
+ name NATIVE_UNUSED
+exit
+interface range FastEthernet0/1 - 9
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+interface range FastEthernet0/10 - 15
+ switchport mode access
+ switchport access vlan 20
+ spanning-tree portfast
+interface range FastEthernet0/16 - 22
+ switchport mode access
+ switchport access vlan 99
+ spanning-tree portfast
+interface GigabitEthernet0/1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,99
+ switchport trunk native vlan 999
+exit
+interface Vlan99
+ ip address 10.10.0.2 255.255.255.0
+ no shutdown
+exit
+ip default-gateway 10.10.0.1
+end
+write memory
